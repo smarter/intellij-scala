@@ -53,7 +53,7 @@ class BspProjectResolver extends ExternalSystemProjectResolver[BspExecutionSetti
     def targetData(targetIds: List[BuildTargetIdentifier])(implicit client: LanguageClient):
     Task[(Either[Response.Error, DependencySourcesResult],
           Either[Response.Error, ScalacOptionsResult])] =
-      if (isPreviewMode)
+      if (isPreviewMode && false)
         Task.now(Right(DependencySourcesResult(List.empty)), Right(ScalacOptionsResult(List.empty)))
       else {
         import endpoints.BuildTarget._
@@ -263,6 +263,7 @@ object BspProjectResolver {
 
   private case class ActiveImport(importCancelable: Cancelable)
 
+  val logger = Logger.getInstance(this.getClass)
 
   /** Find common base path of all given files */
   private def commonBase(dirs: Seq[File]) = {
@@ -332,11 +333,13 @@ object BspProjectResolver {
       // TODO dependencySources gives us both project source dirs as well as actual dependency sources currently.
       // needs to be changed in bsp to allow determining which path is which robustly
       val sourceDirs = sourcePaths.filter(_.isDirectory)
+      logger.info("##id: " + target.id)
+      logger.info("##s: " + sourceDirs)
       // hacky, but works for now
       val dependencySources = sourcePaths.filter(_.getName.endsWith("jar"))
 
       val targetUri = target.id.uri
-      val moduleBase = targetUri.toFile
+      val moduleBase = commonBase(sourceDirs).get  //targetUri.toFile
       val outputPath = scalacOptions.map(_.classDirectory.toFile)
 
       // classpath needs to be filtered for module dependency putput paths since they are handled by IDEA module dep mechanism
