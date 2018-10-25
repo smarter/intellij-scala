@@ -382,23 +382,7 @@ object BspProjectResolver {
         scalaSdkData <- extractScalaSdkData(data.asInstanceOf[JsonElement])
       } yield {
 
-        if(target.getKind == BuildTargetKind.LIBRARY || target.getKind == BuildTargetKind.APP)
-          ScalaModuleDescription(
-            targets = Seq(target),
-            targetDependencies = target.getDependencies.asScala,
-            targetTestDependencies = Seq.empty,
-            basePath = moduleBase,
-            output = outputPath,
-            testOutput = None,
-            sourceDirs = sourceDirs,
-            testSourceDirs = Seq.empty,
-            classPath = classPathWithoutDependencyOutputs,
-            classPathSources = dependencySources,
-            testClassPath = Seq.empty,
-            testClassPathSources = Seq.empty,
-            scalaSdkData = scalaSdkData
-          )
-        else if(target.getKind == BuildTargetKind.TEST)
+        if (target.capabilities.canTest)
           ScalaModuleDescription(
             targets = Seq(target),
             targetDependencies = Seq.empty,
@@ -412,6 +396,22 @@ object BspProjectResolver {
             classPathSources = Seq.empty,
             testClassPath = classPathWithoutDependencyOutputs,
             testClassPathSources = dependencySources,
+            scalaSdkData = scalaSdkData
+          )
+        else if(target.capabilities.canCompile)
+          ScalaModuleDescription(
+            targets = Seq(target),
+            targetDependencies = target.getDependencies.asScala,
+            targetTestDependencies = Seq.empty,
+            basePath = moduleBase,
+            output = outputPath,
+            testOutput = None,
+            sourceDirs = sourceDirs,
+            testSourceDirs = Seq.empty,
+            classPath = classPathWithoutDependencyOutputs,
+            classPathSources = dependencySources,
+            testClassPath = Seq.empty,
+            testClassPathSources = Seq.empty,
             scalaSdkData = scalaSdkData
           )
         else
